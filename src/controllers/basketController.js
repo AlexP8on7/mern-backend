@@ -62,20 +62,3 @@ exports.removeFromBasket = async (req, res) => {
   }
 };
 
-exports.clearBasket = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    
-    const basket = await Basket.findOne({ userId });
-    
-    if (!basket) {
-      return res.status(404).json({ message: 'Basket not found' });
-    }
-    
-    basket.items = [];
-    await basket.save();
-    res.status(200).json(basket);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
