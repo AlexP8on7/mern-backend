@@ -25,7 +25,8 @@ const Quote = mongoose.model('Quote', QuoteSchema);
 const ProductSchema = new mongoose.Schema({
   name: String,
   price: Number,
-  description: String
+  description: String,
+  image: String
 });
 const Product = mongoose.model('Product', ProductSchema);
 
@@ -68,6 +69,27 @@ app.get('/api/quotes', async (req, res) => {
     res.json(quotes);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// GET all products
+app.get('/products', async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching products' });
+  }
+});
+
+// CREATE a new product
+app.post('/products', async (req, res) => {
+  try {
+    const { name, price, description, image } = req.body;
+    const newProduct = await Product.create({ name, price, description, image });
+    res.status(201).json({ message: 'Product added successfully!', product: newProduct });
+  } catch (err) {
+    res.status(500).json({ message: 'Error adding product', error: err.message });
   }
 });
 

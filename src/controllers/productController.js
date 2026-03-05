@@ -1,5 +1,4 @@
-const Product = require('../models/Product'); // Import the model!
-const Product = require('../models/Product'); // Import the model!
+const Product = require('../models/Product');
 
 // READ all products
 exports.getProducts = async (req, res) => {
