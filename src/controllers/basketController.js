@@ -30,10 +30,11 @@ exports.getBasket = async (req, res) => {
   try {
     const { userId } = req.params;
     
-    const basket = await Basket.findOne({ userId }).populate('items.product');
+    let basket = await Basket.findOne({ userId }).populate('items.product');
     
     if (!basket) {
-      return res.status(404).json({ message: 'Basket not found' });
+      // Return empty basket instead of 404
+      return res.status(200).json({ userId, items: [] });
     }
     
     res.status(200).json(basket);
