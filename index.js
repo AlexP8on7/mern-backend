@@ -30,6 +30,19 @@ const ProductSchema = new mongoose.Schema({
 });
 const Product = mongoose.model('Product', ProductSchema);
 
+// Basket Schema
+const BasketItemSchema = new mongoose.Schema({
+  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  quantity: { type: Number, default: 1, min: 1 }
+});
+
+const BasketSchema = new mongoose.Schema({
+  userId: { type: String, required: true, index: true },
+  items: [BasketItemSchema]
+}, { timestamps: true });
+
+const Basket = mongoose.model('Basket', BasketSchema);
+
 // --- ROUTES ---
 
 // Existing Status Route
@@ -125,6 +138,71 @@ if (!deleted) {
 }   catch (err) {
     res.status(500).json({ message: 'Error deleting product', error: err.message });
 }
+});
+
+// BASKET ROUTES
+// Get basket for user
+app.get('/basket/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    let basket = await Basket.findOne({ userId }).populate('items.product');
+    
+    if (!basket) {
+      return res.status(200).json({ userId, items: [] });
+    }
+    
+    res.status(200).json(basket);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add to basket
+app.post('/basket/add', async (req, res) => {
+  try {
+    const { userId, productId, quantity = 1 } = req.body;
+    
+    let basket = await Basket.findOne({ userId });
+    
+    if (!basket) {
+      basket = new Basket({ userId, items: [{ product: productId, quantity }] });
+    } else {
+      const itemIndex = basket.items.findIndex(item => item.product.toString() === productId);
+      
+      if (itemIndex > -1) {
+        basket.items[itemIndex].quantity += quantity;
+      } else {
+        basket.items.push({ product: productId, quantity });
+      }
+    }
+    
+    await basket.save();
+    await basket.populate('items.product');
+    res.status(200).json(basket);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Remove from basket
+app.delete('/basket/remove', async (req, res) => {
+  try {
+    const { userId, productId } = req.body;
+    
+    const basket = await Basket.findOne({ userId });
+    
+    if (!basket) {
+      return res.status(404).json({ message: 'Basket not found' });
+    }
+    
+    basket.items = basket.items.filter(item => item.product.toString() !== productId);
+    
+    await basket.save();
+    await basket.populate('items.product');
+    res.status(200).json(basket);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 mongoose.connect(MONGO_URI)
