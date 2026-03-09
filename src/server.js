@@ -23,6 +23,8 @@ connectDB();
 app.use('/', indexRoutes); // Handles /api/status
 // Mount product routes at the '/products' base path
 app.use('/products', productRoutes);
+app.use('/basket', require('./routes/basketRoutes'));
+
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port: ${PORT}`);
